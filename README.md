@@ -62,6 +62,49 @@ https://youtu.be/x1LHlCCWAac
 
 ---
 
+## System Architecture with GLM
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        AGENT 1 — WhatsApp Bot                   │
+│                          bot.js  ·  photoAgent.js               │
+│                          Node.js process                        │
+│                                                                 │
+│  User sends photos + answers questions via WhatsApp             │
+│       ↓                                                         │
+│  Vision analysis (Gemini) → Brand positioning (Qwen3)           │
+│  → E-commerce listing (Qwen3) → **CN Localization (GLM-4)** │
+│  → AI product photo (Gemini)                                    │
+│       ↓                                                         │
+│  Writes per user:                                               │
+│    {id}.json · {id}_products.json          (source of truth)    │
+│    {id}_USER_PROFILE.md · {id}_PRODUCTS.md (markdown export)    │
+└───────────────────────┬─────────────────────────────────────────┘
+                        │ markdown files passed to Agent 2
+┌───────────────────────▼─────────────────────────────────────────┐
+│                        AGENT 2 — Research Agent                 │
+│                          OpenClaw cron tasks                    │
+│                          Runs weekly, no JS files               │
+│                                                                 │
+│  Reads:  {id}_USER_PROFILE.md · {id}_PRODUCTS.md                │
+│  Config: AGENT02_PROMPTS.md                                     │
+│                                                                 │
+│  CRON TASK 1 — Revenue Detection                                │
+│    → Messages each user via WhatsApp asking for weekly metrics  │
+│    → User replies with sales data                               │
+│    → Writes/updates user{n}_revenue_detection.csv               │
+│                                                                 │
+│  CRON TASK 2 — Global Research + CV Similarity Check            │
+│    → Scrapes Western (Etsy/Amazon) & **Chinese (XHS/Taobao)** │
+│    → **GLM-4: Cross-references CN trends & price gaps** │
+│    → Runs app.py CV workflow on product images when present     │
+│    → Checks image similarity for fraud/originality risk         │
+│    → Estimates price range (Global vs. CN market)               │
+│    → Writes/updates user{n}_rebranding.md                       │
+│    → Generates personalised newsletter (Bilingual context)      │
+│    → Queues WhatsApp delivery back through Agent 1              │
+└─────────────────────────────────────────────────────────────────┘
+```
+---
 ## Project Structure
 
 ```
